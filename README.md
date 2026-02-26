@@ -15,7 +15,7 @@ This repository accompanies the **SIGIR 2026 Resource Paper** introducing MDCite
 - **Scientific fields:** 21  
 - **Publication venues:** >1,000  
 - **Citation intent classes:** 7  
-
+- **Time span:** 2000–2025  
 
 MDCite is designed as a **realistic IR test collection**, preserving the scale, imbalance, and disciplinary heterogeneity of real-world scholarly citations.
 
