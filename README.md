@@ -1,10 +1,10 @@
-# MDCite
-**Dataset construction pipeline for CitationHub — A Large-Scale Multidisciplinary Citation-Event Resource**
+# CitationHub
+**Dataset construction pipeline**
 
 This repository provides the dataset construction pipeline used to build
 **CitationHub**, a large-scale multidisciplinary citation-event resource for
 scientific discovery research. CitationHub models scholarly interactions at the
-**citation-event level** rather than as document-level citation links, and
+citation-event level rather than as document-level citation links, and
 integrates citation events, citation contexts, semantic citation intent
 annotations, normalized scholarly entities, and an ontology-ready knowledge
 graph spanning 21 Essential Science Indicators (ESI) fields.
