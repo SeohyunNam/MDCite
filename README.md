@@ -1,191 +1,280 @@
-# MDCite  
-**A Large-Scale Multi-Disciplinary Citation Context Dataset**
+# MDCite
+**Dataset construction pipeline for CitationHub — A Large-Scale Multidisciplinary Citation-Event Resource**
 
-MDCite is a large-scale, multi-disciplinary citation context dataset designed to support research in citation-aware scholarly information retrieval (IR).  
-The dataset treats citation contexts local textual spans surrounding in-text citations as the primary unit of retrieval and analysis, enabling fine-grained evaluation of intent-aware retrieval, ranking, and candidate generation methods.
+This repository provides the dataset construction pipeline used to build
+**CitationHub**, a large-scale multidisciplinary citation-event resource for
+scientific discovery research. CitationHub models scholarly interactions at the
+**citation-event level** rather than as document-level citation links, and
+integrates citation events, citation contexts, semantic citation intent
+annotations, normalized scholarly entities, and an ontology-ready knowledge
+graph spanning 21 Essential Science Indicators (ESI) fields.
 
-This repository accompanies the **SIGIR 2026 Resource Paper** introducing MDCite and provides all artifacts required to reproduce the dataset construction pipeline and baseline retrieval experiments.
+This repository accompanies the CitationHub **Scientific Data** paper and
+contains all code required to reproduce citation harvesting, metadata
+collection, citation-event construction, semantic citation enrichment, entity
+resolution, ontology-ready knowledge graph generation, and technical
+validation of the released resource.
 
 ---
 
 ## Overview
 
-- **Citation contexts:** 2,057,196  
-- **Citing papers:** ~100,000  
-- **Scientific fields:** 21  
-- **Publication venues:** >1,000  
-- **Citation intent classes:** 7  
-- **Time span:** 2000–2025  
+- **Citation events:** 1,857,503
+- **Citing papers:** 1,467,045
+- **Seed (cited) papers:** 23,479
+- **ESI fields:** 21
+- **Representative WoS categories:** 21
+- **Q1 journals:** 105
+- **Citation intent labels:** 31 observed (30 valid; 7 canonical)
+- **Knowledge graph:** 3,418,433 nodes / 6,855,117 edges
+- **Data snapshot:** collected November 2025
 
-MDCite is designed as a **realistic IR test collection**, preserving the scale, imbalance, and disciplinary heterogeneity of real-world scholarly citations.
+CitationHub preserves the scale, imbalance, and disciplinary heterogeneity of
+real-world scholarly citations across the life sciences, medicine, engineering,
+physical sciences, social sciences, humanities, and multidisciplinary domains.
 
 ---
 
 ## Code Structure
 
 ```
-├── Code/Dataset Construction/
+code/
+├── Dataset Construction/
 │   ├── collect_by_journal.py
 │   ├── paper_title.py
 │   └── batch_paper_title_multi.py
 │
-├── Code/Evaluation/
-│   └── MDCite_SciCite_eval.ipynb
+├── CitationHub Construction/
+│   └── ontology.py
 │
-└── README.md
+└── Technical Validation/
+    └── citationhub_technical_validation.py
+
+README.md
 ```
 
 ---
 
 ## Data Sources
 
-MDCite is constructed by integrating multiple large-scale scholarly data sources:
+CitationHub is constructed by integrating multiple large-scale scholarly data
+sources:
 
-### Scopus bibliographic records (2000–2024)
-Bibliographic metadata are collected via the **Scopus API** (using `pybliometrics`), providing access to journal articles, citation counts, and rich publication metadata.  
-These records form the foundation of the dataset and are used to identify influential papers based on citation statistics.
+### Scopus bibliographic records
+Bibliographic metadata are collected via the **Scopus API** (using
+`pybliometrics`), providing journal articles, citation counts, and rich
+publication metadata. These records are used to identify influential seed
+papers based on journal-stratified citation statistics.
 
-### Web of Science (WoS) 2024 Subject Categories
-WoS subject categories are used to group journals by scientific field and to select **Top-5 Q1 journals per field**, enabling journal-stratified and field-aware normalization.
+### Web of Science (WoS) 2024 Subject Categories (JCR)
+WoS subject categories are used to group journals by scientific field and to
+select **Top-5 Q1 journals per representative category** (105 journals across
+21 categories), enabling journal-stratified, field-aware sampling.
 
 ### OpenAlex API
-The **OpenAlex API** is used for DOI resolution and large-scale citation link retrieval (i.e., identifying papers that cite selected influential works).
+The **OpenAlex API** is used for DOI resolution and large-scale citation-link
+retrieval (i.e., identifying papers that cite the selected seed papers).
 
 ### Semantic Scholar Graph API
-
-The **Semantic Scholar Graph API** is used to retrieve citation context spans and citation intent labels associated with each citing paper.  
-Citation contexts correspond to textual spans surrounding in-text citation markers.
+The **Semantic Scholar Graph API** is used to retrieve citation context spans
+and citation intent signals associated with each citing paper. Citation
+contexts correspond to textual spans surrounding in-text citation markers.
 
 ---
 
-## Dataset Construction Pipeline
+## Construction Pipeline
 
-The MDCite dataset is built through a transparent and reproducible pipeline:
+CitationHub is built through a transparent and reproducible pipeline:
 
-1. **Journal selection**
-   - Journals grouped by WoS subject categories  
-   - Top-5 Q1 journals selected per scientific field  
+1. **Seed paper acquisition & journal-stratified sampling**
+   - Journals grouped by WoS subject categories (21 categories × 5 journals)
+   - Top 5% most-cited papers retained independently within each journal
+   - Produces 23,479 multidisciplinary seed papers
 
-2. **Citation-based filtering**
-   - Top 5% most-cited papers identified independently within each journal  
-   - Prevents dominance by citation-intensive fields  
+2. **Bibliographic metadata collection**
+   - Metadata harmonized across Scopus, OpenAlex, and Semantic Scholar
 
-3. **Citation context extraction**
-   - Citation contexts extracted from papers citing the selected influential papers  
-   - Each context corresponds to a textual span surrounding an in-text citation marker  
+3. **Citation-event extraction**
+   - Each citing publication is linked to a referenced seed paper as a directed
+     citation event, preserving citation contexts and provenance
 
-4. **Citation intent classification**
-   - Each context is automatically assigned one of seven intents:  
-     `background`, `uses`, `similarities`, `differences`, `motivation`, `extends`, `future_work`
+4. **Semantic citation intent annotation**
+   - Citation events are annotated with citation intents using a graph neural
+     network-based citation intent classification framework (weak supervision)
 
-5. **Dataset variants**
-   - Multi-intent intermediate artifacts (for provenance)  
-   - Single-intent benchmark variant (for standard IR and classification)
+5. **Entity normalization & DOI processing**
+   - Normalized identifiers for authors, affiliations, journals, cities,
+     countries, fields, and citation intents
+
+6. **Ontology-ready knowledge graph construction**
+   - Heterogeneous nodes and typed edges (3,418,433 nodes / 6,855,117 edges)
+
+7. **Release**
+   - Structured Apache Parquet tables for citation events, publication
+     metadata, normalized entities, and the knowledge graph
 
 ---
 
 ## Code Description
 
-### Data Construction (`Code/Dataset Construction/`)
+### Dataset Construction (`code/Dataset Construction/`)
 
 #### `collect_by_journal.py`
 - Uses the **Scopus API** to collect journal-level bibliographic metadata.
-- Implements:
-  - Article collection per journal  
-  - Citation count retrieval  
-  - Journal-stratified Top-5% cited paper selection  
-- Produces intermediate artifacts used for identifying influential papers.
+- Implements article collection per journal, citation-count retrieval, and
+  journal-stratified Top-5% cited paper selection.
+- Produces intermediate artifacts used to identify influential seed papers.
 
 #### `paper_title.py`
 - Core citation context extraction engine.
-- Resolves DOIs (via OpenAlex if necessary).
-- Retrieves citation links via the **OpenAlex API**.
-- Retrieves citation context spans and intent labels via the **Semantic Scholar Graph API**.
-- Outputs structured citation context records used to construct the MDCite dataset.
-  
+- Resolves DOIs (via OpenAlex if necessary) and retrieves citation links via
+  the **OpenAlex API**.
+- Retrieves citation context spans and intent signals via the
+  **Semantic Scholar Graph API**.
+- Outputs structured citation context records.
+
 #### `batch_paper_title_multi.py`
-- Batch execution wrapper for paper_title.py.
-- Iterates over lists of influential papers and performs large-scale context extraction.
-- Supports scalable querying across multiple journal groups.
+- Batch execution wrapper for `paper_title.py`.
+- Iterates over lists of influential papers for large-scale context extraction
+  across multiple journal groups.
 
-Together, these scripts implement the **dataset construction pipeline** described in the SIGIR 2026 paper.
+### CitationHub Construction (`code/CitationHub Construction/`)
+
+#### `ontology.py`
+- Builds the ontology-ready CitationHub resource from the raw seed-paper and
+  citing-context archives.
+- Generates citation-event records, citing-paper and seed-paper tables,
+  enriched citation events, and normalized entity lookup tables
+  (authors, affiliations, journals, cities, countries, fields, intents).
+- Constructs the ontology-ready knowledge graph (`kg_nodes.parquet`,
+  `kg_edges.parquet`) with typed nodes and edges.
+- Run with:
+  ```bash
+  python "code/CitationHub Construction/ontology.py" --base-dir /path/to/wos_data
+  ```
+- Outputs are written to `<base-dir>/citationhub_v1_ontology_ready/`.
+
+### Technical Validation (`code/Technical Validation/`)
+
+#### `citationhub_technical_validation.py`
+- Reproduces the technical-validation analyses reported in the paper:
+  metadata completeness, citation-event referential integrity, citation-intent
+  distribution and coverage, knowledge-graph integrity, and entity-table
+  uniqueness.
+- Writes per-check CSV tables and a bundled ZIP of all validation results.
+- Run with:
+  ```bash
+  python "code/Technical Validation/citationhub_technical_validation.py" \
+      --data-dir /path/to/wos_data/citationhub_v1_ontology_ready --make-figures
+  ```
 
 ---
 
-### Evaluation (`Code/Evaluation/`)
+## Released Dataset Components
 
-#### `MDCite_SciCite_eval.ipynb`
-- Implements **BM25-based citation context retrieval**.
-- Evaluates retrieval performance on:
-  - **MDCite (single-intent variant)**  
-  - **SciCite** (for comparison)
-- Reports standard IR metrics:
-  - **nDCG@10**
-  - **Recall@k** (e.g., Recall@100, Recall@1000)
-- Supports:
-  - Intent-wise evaluation  
-  - Dataset-level comparison  
-  - Deep-retrieval analysis under large relevance sets  
+The released CitationHub resource is distributed as structured Parquet files:
 
-This code demonstrates that MDCite naturally supports candidate generation and deep-retrieval evaluation, where recall improves only at larger cutoffs due to large and distributed relevance sets.
+| Component | Rows | Columns |
+|-----------|------|---------|
+| citation_events.parquet | 1,857,503 | 20 |
+| citation_events_enriched.parquet | 1,857,503 | 32 |
+| citation_events_normalized.parquet | 1,857,503 | 23 |
+| citing_papers.parquet | 1,467,045 | 7 |
+| citing_papers_normalized.parquet | 1,467,045 | 8 |
+| seed_cited_papers.parquet | 23,479 | 42 |
+| seed_cited_papers_normalized.parquet | 23,479 | 48 |
+| authors.parquet | 16,839 | 2 |
+| affiliations.parquet | 5,271 | 2 |
+| affiliation_geo.parquet | 5,352 | 6 |
+| cities.parquet | 1,899 | 2 |
+| countries.parquet | 108 | 2 |
+| journals.parquet | 46,237 | 2 |
+| fields.parquet | 21 | 3 |
+| intents.parquet | 31 | 2 |
+| kg_nodes.parquet | 3,418,433 | 14 |
+| kg_edges.parquet | 6,855,117 | 3 |
 
 ---
 
-## Dataset Schema
+## Knowledge Graph Schema
 
-Each citation context instance contains the following fields:
+| Node Type | Attributes |
+|-----------|------------|
+| SeedPaper | doi, title, journal, author, affiliation, country, field, citedby_count |
+| CitationEvent | event_id, citing_year, primary_intent, context, is_influential |
+| CitingPaper | doi, title, year, venue |
+| Intent | background, uses, similarities, motivation, differences, future_work, extends |
+| Journal | journal_name |
+| Author | author_id, author_name |
+| Affiliation | affiliation_name |
+| City | city_name |
+| Country | country_name |
+| Field | field_name |
 
-| Field | Description |
-|------|------------|
-| `text` | Citation context text |
-| `label` | Functional citation intent |
-| `field` | Scientific field |
-| `group_id` | Citing paper identifier |
-| `paperId` | Semantic scholar work identifier |
-| `doi` | Digital Object Identifier |
-| `venue` | Publication venue |
-| `year` | Publication year |
-| `source_file` | Provenance identifier |
-
-The `group_id` field enables document-aware evaluation and prevents information leakage in retrieval experiments.
+| Edge Type | Relation |
+|-----------|----------|
+| HAS_CITING_PAPER | CitationEvent → CitingPaper |
+| HAS_CITED_PAPER | CitationEvent → SeedPaper |
+| HAS_PRIMARY_INTENT | CitationEvent → Intent |
+| PUBLISHED_IN | SeedPaper → Journal |
+| HAS_AUTHOR | SeedPaper → Author |
+| HAS_AFFILIATION | SeedPaper → Affiliation |
+| LOCATED_IN_CITY | Affiliation → City |
+| LOCATED_IN_COUNTRY | Affiliation → Country |
+| BELONGS_TO_FIELD | SeedPaper → Field |
+| PUBLISHED_IN_VENUE | CitingPaper → Journal |
 
 ---
 
 ## Intended Use Cases
 
-MDCite supports a wide range of research scenarios, including:
+CitationHub supports a wide range of research scenarios, including:
 
-- Citation-aware information retrieval  
-- Intent-aware ranking and re-ranking  
-- Candidate generation analysis  
-- Large-scale citation intent classification  
-- Scholarly search and citation analysis  
-
-Baseline BM25 experiments show that MDCite naturally supports deep-retrieval evaluation, where recall improves only at larger cutoffs.
+- Citation-aware information retrieval
+- Intent-aware ranking and re-ranking
+- Citation recommendation and candidate generation
+- Large-scale citation intent classification
+- Scientometric and bibliometric analysis
+- Knowledge graph analytics and link prediction
+- AI-assisted scientific discovery workflows
 
 ---
 
 ## Reproducibility
 
+### Requirements
+- Python 3.9+
+- `pandas`, `pyarrow`, `matplotlib` (figures only), and `pybliometrics`
+  (Scopus collection only)
+
 ### API Requirements
-
-Reproducing the full dataset construction requires:
-
+Reproducing the full pipeline requires:
 - Access to the **Scopus API** (institutional entitlement may be required)
 - Access to the **OpenAlex API** (publicly available)
 - Access to the **Semantic Scholar Graph API** (publicly available; rate limits apply)
 
-API keys, where required, must be supplied via environment variables and are not included in this repository.
-All scripts, intermediate artifacts, and processed datasets are released to support end-to-end reproducible research.  
-Document-level identifiers and clearly separated construction and evaluation code help avoid information leakage and ensure consistent experimental setups.
+API keys, where required, must be supplied via environment variables and are
+not included in this repository. Because the underlying scholarly
+infrastructures are continuously updated, CitationHub should be interpreted as
+a snapshot of the scholarly ecosystem corresponding to the November 2025
+collection period.
+
+---
+
+## Code Availability
+
+The software resources associated with CitationHub are provided through two
+complementary repositories:
+
+- **Dataset construction pipeline (this repository):**
+  https://github.com/kecau/MDCite
+- **Interactive dashboard and visualization platform:**
+  https://github.com/kecau/CitationHub
 
 ---
 
 ## Data Availability
 
-The processed citation context and intent datasets used in this study are
-publicly available via Zenodo at https://doi.org/10.5281/zenodo.18410050.
-
----
-
-
+- **Archived dataset (Zenodo):** https://zenodo.org/records/18536895
+- **Processed graph database (Hugging Face):**
+  https://huggingface.co/datasets/Daniel0315/CitationHub

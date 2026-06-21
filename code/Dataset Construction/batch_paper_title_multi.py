@@ -1,25 +1,36 @@
+"""Batch driver for large-scale citation context extraction.
+
+This script wraps :func:`paper_title.process_one` to extract citation contexts
+for many seed papers. It supports two modes:
+
+    single   Process one CSV file of seed papers into one output directory.
+    multi    Process every ``*_top5pct_per_journal_for_paper_title.csv`` file
+             found in a directory, writing per-group output subdirectories.
+
+Each input CSV is expected to contain at least ``title`` and ``doi`` columns.
+
+Usage
+-----
+    # Single CSV
+    python batch_paper_title_multi.py --mode single \\
+        --csv seeds.csv --out output_seeds
+
+    # All per-journal group CSVs in a directory
+    python batch_paper_title_multi.py --mode multi \\
+        --csv-dir group_top5pct_per_journal --out-base-dir output_groups
+"""
 
 import os
 import time
 import math
 import glob
+import argparse
+
 import pandas as pd
-from paper_title import process_one  # import your existing script
 
+from paper_title import process_one
 
-MODE = "multi"   
-
-CSV_PATH = r"C:\Users\user\pybliometrics_ml\lancet_top5_for_paper_title.csv"
-OUT_DIR  = r"C:\Users\user\pybliometrics_ml\output_lancet_top5"
-
-CSV_DIR = r"C:\Users\user\OneDrive\바탕 화면\wos dataset\group_top5pct_per_journal\group_top5pct_per_journal"
-OUT_BASE_DIR = r"C:\Users\user\pybliometrics_ml\output_group_top5pct_per_journal"
-
-SLEEP_SEC = 1.0
-LIMIT = 0                  
-FETCH_OPENALEX = True
-FETCH_SCOPUS   = False
-SCOPUS_YEAR_RANGE = None  
+DEFAULT_PATTERN = "*_top5pct_per_journal_for_paper_title.csv"
 
 
 def clean_doi(value):
@@ -30,8 +41,8 @@ def clean_doi(value):
     return str(value).strip()
 
 
-def run_for_one(csv_path, out_dir):
-    
+def run_for_one(csv_path, out_dir, *, limit, sleep_sec, fetch_openalex,
+                fetch_scopus, scopus_year_range):
     os.makedirs(out_dir, exist_ok=True)
     df = pd.read_csv(csv_path)
     n = len(df)
@@ -43,11 +54,11 @@ def run_for_one(csv_path, out_dir):
         doi = clean_doi(row.get("doi"))
 
         if not title and not doi:
-            print(f"[{idx+1}/{n}] Missing title/doi → skip")
+            print(f"[{idx + 1}/{n}] Missing title/doi -> skip")
             continue
 
         print("\n==========================================")
-        print(f"[{idx+1}/{n}]")
+        print(f"[{idx + 1}/{n}]")
         print("TITLE:", title)
         print("DOI  :", doi)
 
@@ -56,53 +67,101 @@ def run_for_one(csv_path, out_dir):
                 title=title,
                 doi=doi,
                 outdir=out_dir,
-                limit=LIMIT,
-                fetch_openalex=FETCH_OPENALEX,
-                fetch_scopus=FETCH_SCOPUS,
-                scopus_year_range=SCOPUS_YEAR_RANGE,
+                limit=limit,
+                fetch_openalex=fetch_openalex,
+                fetch_scopus=fetch_scopus,
+                scopus_year_range=scopus_year_range,
             )
         except Exception as e:
-            print(f"[{idx+1}/{n}] Error → skip: {e}")
+            print(f"[{idx + 1}/{n}] Error -> skip: {e}")
 
-        time.sleep(SLEEP_SEC)
+        time.sleep(sleep_sec)
 
     print(f"\nDone for CSV: {csv_path}")
 
 
-def run_for_all_groups():
-    
-    os.makedirs(OUT_BASE_DIR, exist_ok=True)
+def run_for_all_groups(csv_dir, out_base_dir, *, pattern, limit, sleep_sec,
+                       fetch_openalex, fetch_scopus, scopus_year_range):
+    os.makedirs(out_base_dir, exist_ok=True)
 
-    pattern = os.path.join(CSV_DIR, "*_top5pct_per_journal_for_paper_title.csv")
-    csv_files = sorted(glob.glob(pattern))
+    search = os.path.join(csv_dir, pattern)
+    csv_files = sorted(glob.glob(search))
 
     if not csv_files:
-        print(f"⚠ No CSV files found with pattern: {pattern}")
+        print(f"[warn] No CSV files found with pattern: {search}")
         return
 
     print(f"Found {len(csv_files)} group CSV files.")
+    suffix = "_top5pct_per_journal_for_paper_title.csv"
     for csv_path in csv_files:
         base = os.path.basename(csv_path)
-        group_key = base.replace("_top5pct_per_journal_for_paper_title.csv", "")
-        out_dir = os.path.join(OUT_BASE_DIR, f"output_{group_key}")
+        group_key = base.replace(suffix, "")
+        out_dir = os.path.join(out_base_dir, f"output_{group_key}")
 
         print("\n==========================================")
-        print(f"▶ 그룹: {group_key}")
+        print(f"Group: {group_key}")
         print(f"   CSV : {csv_path}")
         print(f"   OUT : {out_dir}")
 
-        run_for_one(csv_path, out_dir)
+        run_for_one(
+            csv_path, out_dir,
+            limit=limit, sleep_sec=sleep_sec,
+            fetch_openalex=fetch_openalex, fetch_scopus=fetch_scopus,
+            scopus_year_range=scopus_year_range,
+        )
 
     print("\n=== All groups processed. ===")
 
 
-def main():
-    if MODE == "single":
-        run_for_one(CSV_PATH, OUT_DIR)
-    elif MODE == "multi":
-        run_for_all_groups()
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Batch citation context extraction for seed papers."
+    )
+    parser.add_argument("--mode", choices=["single", "multi"], default="multi")
+    parser.add_argument("--csv", help="Input CSV path (single mode).")
+    parser.add_argument("--out", help="Output directory (single mode).")
+    parser.add_argument("--csv-dir", help="Directory of group CSV files (multi mode).")
+    parser.add_argument("--out-base-dir", help="Base output directory (multi mode).")
+    parser.add_argument("--pattern", default=DEFAULT_PATTERN,
+                        help="Glob pattern for group CSVs (multi mode).")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="Max citation contexts per paper (0 = no limit).")
+    parser.add_argument("--sleep", type=float, default=1.0,
+                        help="Delay in seconds between papers.")
+    parser.add_argument("--fetch-openalex", dest="fetch_openalex",
+                        action="store_true", default=True,
+                        help="Also save the OpenAlex citing list (default on).")
+    parser.add_argument("--no-fetch-openalex", dest="fetch_openalex",
+                        action="store_false")
+    parser.add_argument("--fetch-scopus", dest="fetch_scopus",
+                        action="store_true", default=False,
+                        help="Attempt Scopus full citing retrieval (requires entitlement).")
+    parser.add_argument("--scopus-year-range", default=None,
+                        help="Optional Scopus year range filter.")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+
+    if args.mode == "single":
+        if not args.csv or not args.out:
+            raise SystemExit("single mode requires --csv and --out")
+        run_for_one(
+            args.csv, args.out,
+            limit=args.limit, sleep_sec=args.sleep,
+            fetch_openalex=args.fetch_openalex, fetch_scopus=args.fetch_scopus,
+            scopus_year_range=args.scopus_year_range,
+        )
     else:
-        raise ValueError("MODE must be 'single' or 'multi'")
+        if not args.csv_dir or not args.out_base_dir:
+            raise SystemExit("multi mode requires --csv-dir and --out-base-dir")
+        run_for_all_groups(
+            args.csv_dir, args.out_base_dir,
+            pattern=args.pattern, limit=args.limit, sleep_sec=args.sleep,
+            fetch_openalex=args.fetch_openalex, fetch_scopus=args.fetch_scopus,
+            scopus_year_range=args.scopus_year_range,
+        )
 
 
 if __name__ == "__main__":

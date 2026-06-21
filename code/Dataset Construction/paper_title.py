@@ -1,20 +1,52 @@
+"""Citation context extraction engine for CitationHub.
+
+For a given seed paper (identified by DOI or title), this module:
+
+    1. Resolves the DOI through the OpenAlex API when only a title is provided.
+    2. Optionally retrieves the full list of citing works via the OpenAlex API.
+    3. Retrieves citation context spans, citation intents, and citing-paper
+       metadata via the Semantic Scholar Graph API.
+
+Results for each seed paper are written to a per-DOI subdirectory containing
+``citing_contexts.json`` (and, optionally, ``openalex_citing_all.csv``). These
+records are the input to the CitationHub construction pipeline
+(``CitationHub Construction/ontology.py``).
+
+This module exposes :func:`process_one`, which is called by
+``batch_paper_title_multi.py`` for large-scale extraction.
+
+Environment variables
+---------------------
+SEMANTIC_SCHOLAR_API_KEY
+    Optional Semantic Scholar Graph API key. When set, it is sent as the
+    ``x-api-key`` header to raise the request rate limit.
+"""
+
 import os
 import re
-import csv
 import time
 import json
-from typing import Optional, List, Dict
+from typing import Optional
 
 import requests
 import pandas as pd
 
 S2_BASE = "https://api.semanticscholar.org/graph/v1"
 OA_BASE = "https://api.openalex.org"
-HEADERS = {"User-Agent": "MDCite-SIGIR-2026", "Accept": "application/json"}
+HEADERS = {"User-Agent": "CitationHub", "Accept": "application/json"}
+
+
+def _s2_headers() -> dict:
+    """Return Semantic Scholar headers, adding the API key when available."""
+    headers = dict(HEADERS)
+    api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+    if api_key:
+        headers["x-api-key"] = api_key
+    return headers
 
 
 def slug(text: str) -> str:
-    return re.sub(r'[^A-Za-z0-9._-]+', '_', text or "").strip('_')[:120]
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", text or "").strip("_")[:120]
 
 
 # ------------------ OpenAlex ------------------
@@ -38,7 +70,7 @@ def openalex_resolve_doi(title: str):
 
 
 def openalex_all_citers_by_doi(doi: str):
-    r = requests.get(f"{OA_BASE}/works/https://doi.org/{doi}")
+    r = requests.get(f"{OA_BASE}/works/https://doi.org/{doi}", timeout=30)
     if r.status_code != 200:
         return []
 
@@ -50,7 +82,7 @@ def openalex_all_citers_by_doi(doi: str):
     cursor = "*"
 
     while True:
-        r = requests.get(cited_by_url, params={"per_page": 200, "cursor": cursor})
+        r = requests.get(cited_by_url, params={"per_page": 200, "cursor": cursor}, timeout=30)
         if r.status_code != 200:
             break
         data = r.json()
@@ -68,7 +100,7 @@ def s2_get_paper_id(doi: str) -> Optional[str]:
     r = requests.get(
         f"{S2_BASE}/paper/DOI:{doi}",
         params={"fields": "paperId,title"},
-        headers=HEADERS,
+        headers=_s2_headers(),
         timeout=30,
     )
     if r.status_code != 200:
@@ -90,14 +122,14 @@ def s2_fetch_citation_contexts(paper_id: str, limit: int):
         "citingPaper.year",
         "citingPaper.venue",
         "citingPaper.externalIds",
-        "citingPaper.paperId"
+        "citingPaper.paperId",
     ])
 
     while len(rows) < max_limit:
         r = requests.get(
             f"{S2_BASE}/paper/{paper_id}/citations",
             params={"fields": fields, "limit": page_size, "offset": offset},
-            headers=HEADERS,
+            headers=_s2_headers(),
             timeout=30,
         )
 
@@ -133,7 +165,7 @@ def s2_fetch_citation_contexts(paper_id: str, limit: int):
 
 
 # ======================================================
-# REQUIRED SIGNATURE (compatible with batch script)
+# Entry point (compatible with batch_paper_title_multi.py)
 # ======================================================
 
 def process_one(
@@ -145,20 +177,20 @@ def process_one(
     fetch_scopus: bool,
     scopus_year_range: Optional[str],
 ):
-    """
-    Main entry point called by batch_paper_title_multi.py
-    """
+    """Extract citation contexts for a single seed paper.
 
+    Called by ``batch_paper_title_multi.py``.
+    """
     print("\n=== Processing ===")
     print("Title:", title)
     print("DOI:", doi)
 
-    # Resolve DOI via OpenAlex if needed
+    # Resolve DOI via OpenAlex if needed.
     if not doi and title:
         doi, _ = openalex_resolve_doi(title)
 
     if not doi:
-        print("❌ Could not resolve DOI.")
+        print("[skip] Could not resolve DOI.")
         return
 
     print("Resolved DOI:", doi)
@@ -166,7 +198,7 @@ def process_one(
     subdir = os.path.join(outdir, slug(doi))
     os.makedirs(subdir, exist_ok=True)
 
-    # 1️ Optional OpenAlex citing list
+    # 1. Optional OpenAlex citing list.
     if fetch_openalex:
         oa_rows = openalex_all_citers_by_doi(doi)
         if oa_rows:
@@ -177,10 +209,10 @@ def process_one(
             )
             print(f"[OpenAlex] saved {len(oa_rows)} citing papers")
 
-    # 2️ Semantic Scholar citation contexts
+    # 2. Semantic Scholar citation contexts.
     paper_id = s2_get_paper_id(doi)
     if not paper_id:
-        print("❌ S2 paperId not found.")
+        print("[skip] Semantic Scholar paperId not found.")
         return
 
     rows = s2_fetch_citation_contexts(paper_id, limit)
@@ -190,6 +222,6 @@ def process_one(
 
     print(f"Saved {len(rows)} citation contexts.")
 
-    # 3️ Scopus full citers (optional stub — no hard dependency)
+    # 3. Scopus full citing retrieval (optional; requires separate entitlement).
     if fetch_scopus:
-        print("[Info] Scopus full citing retrieval requires separate implementation and entitlement.")
+        print("[info] Scopus full citing retrieval requires separate implementation and entitlement.")

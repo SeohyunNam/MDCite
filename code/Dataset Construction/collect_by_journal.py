@@ -1,6 +1,20 @@
+"""Collect Scopus bibliographic records for a journal within a year range.
+
+This script queries the Scopus API (via ``pybliometrics``) for all articles in
+a given journal (by title or ISSN) and publication-year range, deduplicates the
+records, and writes them to a CSV file. The output is used to identify the
+journal-stratified Top-5% most-cited seed papers for CitationHub.
+
+The Scopus API key (and optional institutional token) must be supplied through
+the ``SCOPUS_APIKEY`` and ``SCOPUS_INSTTOKEN`` environment variables.
+
+Usage
+-----
+    python collect_by_journal.py --issn 0140-6736 \\
+        --year-from 2000 --year-to 2024 --out lancet.csv
+"""
 
 import os
-import csv
 import argparse
 from typing import List, Optional
 
