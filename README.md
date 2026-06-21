@@ -9,7 +9,7 @@ integrates citation events, citation contexts, semantic citation intent
 annotations, normalized scholarly entities, and an ontology-ready knowledge
 graph spanning 21 Essential Science Indicators (ESI) fields.
 
-This repository accompanies the CitationHub **Scientific Data** paper and
+This repository accompanies the CitationHub **Scientific data** paper and
 contains all code required to reproduce citation harvesting, metadata
 collection, citation-event construction, semantic citation enrichment, entity
 resolution, ontology-ready knowledge graph generation, and technical
