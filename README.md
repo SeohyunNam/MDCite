@@ -16,7 +16,7 @@ and citation metadata, while IDCite extends this foundation through metadata
 normalization, entity resolution, semantic enrichment, ontology construction,
 and knowledge graph generation.
 
-This repository accompanies the IDCite **Scientific Data** paper and contains
+This repository accompanies the IDCite Data Descriptor manuscript submitted to Scientific Data. and It contains
 all code required to reproduce citation harvesting, metadata collection,
 citation-event construction, semantic citation enrichment, entity resolution,
 ontology-ready knowledge graph generation, and technical validation of the
