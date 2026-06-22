@@ -1,23 +1,24 @@
 # IDCite
-**Interdisciplinary Discovery Citation Dataset**
+**An interdisciplinary citation dataset with citation contexts, citation intents and knowledge graphs**
 
 This repository provides the dataset construction pipeline used to build
 **IDCite**, a large-scale multidisciplinary citation-event resource for
-interdisciplinary discovery and scientific discovery research. IDCite models
-scholarly interactions at the citation-event level rather than as
+interdisciplinary discovery and scientific discovery research. 
+
+**IDCite** models scholarly interactions at the citation-event level rather than as
 document-level citation links, and integrates citation events, citation
 contexts, semantic citation intent annotations, normalized scholarly entities,
 geographic information, and an ontology-ready knowledge graph spanning 21
 Essential Science Indicators (ESI) fields.
 
-IDCite is a graph-oriented resource derived from the previously released
+**IDCite** is a graph-oriented resource derived from the previously released
 **MDContextCite** citation dataset: MDContextCite provides large-scale citation-event records
 and citation metadata, while IDCite extends this foundation through metadata
 normalization, entity resolution, semantic enrichment, ontology construction,
 and knowledge graph generation.
 
-This repository accompanies the IDCite Data Descriptor manuscript submitted to Scientific Data. and It contains
-all code required to reproduce citation harvesting, metadata collection,
+This repository accompanies the **IDCite** Data Descriptor manuscript submitted to Scientific Data. 
+It contains all code required to reproduce citation harvesting, metadata collection,
 citation-event construction, semantic citation enrichment, entity resolution,
 ontology-ready knowledge graph generation, and technical validation of the
 released resource.
