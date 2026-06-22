@@ -11,7 +11,7 @@ geographic information, and an ontology-ready knowledge graph spanning 21
 Essential Science Indicators (ESI) fields.
 
 IDCite is a graph-oriented resource derived from the previously released
-**MDCite** citation dataset: MDCite provides large-scale citation-event records
+**MDContextCite** citation dataset: MDCite provides large-scale citation-event records
 and citation metadata, while IDCite extends this foundation through metadata
 normalization, entity resolution, semantic enrichment, ontology construction,
 and knowledge graph generation.
