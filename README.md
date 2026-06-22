@@ -284,5 +284,5 @@ complementary repositories:
 
 ## Data Availability
 
-- **Original MDContextCite database (Zenodo):** https://zenodo.org/records/18536895
-- **IDCite processed dataset and graph database (Hugging Face):** https://huggingface.co/datasets/Daniel0315/IDCite
+- **Original MDContextCite database (Zenodo):**  https://zenodo.org/records/18536895
+- **IDCite processed dataset and graph database (Hugging Face):**  https://huggingface.co/datasets/Daniel0315/IDCite
