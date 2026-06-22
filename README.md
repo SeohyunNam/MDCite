@@ -274,7 +274,7 @@ collection period.
 The software resources associated with IDCite are provided through two
 complementary repositories:
 
-- **Dataset construction pipeline (MDCite, this repository):**
+- **Dataset construction pipeline (MDContextCite, this repository):**
   https://github.com/kecau/MDCite
 - **Interactive dashboard and visualization platform (CitationHub):**
   https://github.com/kecau/CitationHub
@@ -283,6 +283,6 @@ complementary repositories:
 
 ## Data Availability
 
-- **Original MDCite dataset (Zenodo):** https://zenodo.org/records/18536895
+- **Original MDContextCite dataset (Zenodo):** https://zenodo.org/records/18536895
 - **IDCite processed dataset and graph database (Hugging Face):**
   https://huggingface.co/datasets/Daniel0315/CitationHub
