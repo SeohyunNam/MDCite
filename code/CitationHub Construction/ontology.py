@@ -1,6 +1,6 @@
-"""CitationHub ontology-ready knowledge graph construction pipeline.
+"""IDCite ontology-ready knowledge graph construction pipeline.
 
-This script builds the ontology-ready CitationHub resource from the two raw
+This script builds the ontology-ready IDCite resource from the two raw
 inputs collected during dataset construction:
 
     1. Journal-stratified top-5%% seed (cited) papers exported from Scopus,
@@ -10,7 +10,7 @@ inputs collected during dataset construction:
        ``citing_contexts.json`` files organized by ESI field folder and by a
        per-seed-paper DOI bundle directory.
 
-It produces the released Parquet tables described in the CitationHub
+It produces the released Parquet tables described in the IDCite
 Scientific Data paper (Methods 2.4-2.9):
 
     seed_cited_papers.parquet           seed (cited) paper metadata
@@ -691,7 +691,7 @@ def run_pipeline(base_dir: Path, cited_zip_name: str, citing_zip_name: str) -> N
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build the ontology-ready CitationHub resource from raw inputs."
+        description="Build the ontology-ready IDCite resource from raw inputs."
     )
     parser.add_argument(
         "--base-dir",

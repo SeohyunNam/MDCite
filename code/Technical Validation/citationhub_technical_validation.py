@@ -1,7 +1,7 @@
-"""Technical validation for the CitationHub resource.
+"""Technical validation for the IDCite resource.
 
 This script reproduces the technical-validation analyses reported in the
-CitationHub Scientific Data paper (Section 3). Given the ontology-ready
+IDCite Scientific Data paper (Section 3). Given the ontology-ready
 Parquet tables produced by ``ontology.py``, it computes:
 
     1. Metadata completeness for the citation-event, citing-paper, and
@@ -311,13 +311,13 @@ def run_validation(data_dir: Path, out_dir: Path, make_figures: bool) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run technical validation on the CitationHub Parquet tables."
+        description="Run technical validation on the IDCite Parquet tables."
     )
     parser.add_argument(
         "--data-dir",
         required=True,
         type=Path,
-        help="Directory containing the CitationHub *.parquet tables.",
+        help="Directory containing the IDCite *.parquet tables.",
     )
     parser.add_argument(
         "--out-dir",

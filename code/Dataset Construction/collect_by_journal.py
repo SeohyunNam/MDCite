@@ -3,7 +3,7 @@
 This script queries the Scopus API (via ``pybliometrics``) for all articles in
 a given journal (by title or ISSN) and publication-year range, deduplicates the
 records, and writes them to a CSV file. The output is used to identify the
-journal-stratified Top-5% most-cited seed papers for CitationHub.
+journal-stratified Top-5% most-cited seed papers for IDCite.
 
 The Scopus API key (and optional institutional token) must be supplied through
 the ``SCOPUS_APIKEY`` and ``SCOPUS_INSTTOKEN`` environment variables.
