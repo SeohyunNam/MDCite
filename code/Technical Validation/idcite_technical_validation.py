@@ -23,7 +23,7 @@ archive. An optional citation-intent figure (Fig. 3) can be produced with
 
 Usage
 -----
-    python citationhub_technical_validation.py --data-dir /path/to/citationhub_v1_ontology_ready
+    python idcite_technical_validation.py --data-dir /path/to/citationhub_v1_ontology_ready
 
 The ``--data-dir`` argument must point to the directory containing the
 ``*.parquet`` tables (i.e. ``<base-dir>/citationhub_v1_ontology_ready``).

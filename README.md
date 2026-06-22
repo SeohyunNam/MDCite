@@ -55,7 +55,7 @@ code/
 │   └── ontology.py
 │
 └── Technical Validation/
-    └── citationhub_technical_validation.py
+    └── idcite_technical_validation.py
 
 README.md
 ```
@@ -163,7 +163,7 @@ IDCite is built through a transparent and reproducible pipeline:
 
 ### Technical Validation (`code/Technical Validation/`)
 
-#### `citationhub_technical_validation.py`
+#### `idcite_technical_validation.py`
 - Reproduces the technical-validation analyses reported in the paper:
   metadata completeness, citation-event referential integrity, citation-intent
   distribution and coverage, knowledge-graph integrity, and entity-table
@@ -171,7 +171,7 @@ IDCite is built through a transparent and reproducible pipeline:
 - Writes per-check CSV tables and a bundled ZIP of all validation results.
 - Run with:
   ```bash
-  python "code/Technical Validation/citationhub_technical_validation.py" \
+  python "code/Technical Validation/idcite_technical_validation.py" \
       --data-dir /path/to/wos_data/citationhub_v1_ontology_ready --make-figures
   ```
 
