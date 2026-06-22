@@ -10,7 +10,7 @@ For a given seed paper (identified by DOI or title), this module:
 Results for each seed paper are written to a per-DOI subdirectory containing
 ``citing_contexts.json`` (and, optionally, ``openalex_citing_all.csv``). These
 records are the input to the IDCite construction pipeline
-(``CitationHub Construction/ontology.py``).
+(``IDCite Construction/ontology.py``).
 
 This module exposes :func:`process_one`, which is called by
 ``batch_paper_title_multi.py`` for large-scale extraction.

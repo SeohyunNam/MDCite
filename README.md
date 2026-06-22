@@ -46,12 +46,12 @@ physical sciences, social sciences, humanities, and multidisciplinary domains.
 
 ```
 code/
-├── Dataset Construction/
+├── Data Collection/
 │   ├── collect_by_journal.py
 │   ├── paper_title.py
 │   └── batch_paper_title_multi.py
 │
-├── CitationHub Construction/
+├── IDCite Construction/
 │   └── ontology.py
 │
 └── Technical Validation/
@@ -124,7 +124,7 @@ IDCite is built through a transparent and reproducible pipeline:
 
 ## Code Description
 
-### Dataset Construction (`code/Dataset Construction/`)
+### Data Collection (`code/Data Collection/`)
 
 #### `collect_by_journal.py`
 - Uses the **Scopus API** to collect journal-level bibliographic metadata.
@@ -145,7 +145,7 @@ IDCite is built through a transparent and reproducible pipeline:
 - Iterates over lists of influential papers for large-scale context extraction
   across multiple journal groups.
 
-### IDCite Construction (`code/CitationHub Construction/`)
+### IDCite Construction (`code/IDCite Construction/`)
 
 #### `ontology.py`
 - Builds the ontology-ready IDCite resource from the raw seed-paper and
@@ -157,7 +157,7 @@ IDCite is built through a transparent and reproducible pipeline:
   `kg_edges.parquet`) with typed nodes and edges.
 - Run with:
   ```bash
-  python "code/CitationHub Construction/ontology.py" --base-dir /path/to/wos_data
+  python "code/IDCite Construction/ontology.py" --base-dir /path/to/wos_data
   ```
 - Outputs are written to `<base-dir>/citationhub_v1_ontology_ready/`.
 
