@@ -1,19 +1,26 @@
-# CitationHub
-**Dataset construction pipeline**
+# IDCite
+**Interdisciplinary Discovery Citation Dataset — dataset construction pipeline**
 
 This repository provides the dataset construction pipeline used to build
-**CitationHub**, a large-scale multidisciplinary citation-event resource for
-scientific discovery research. CitationHub models scholarly interactions at the
-citation-event level rather than as document-level citation links, and
-integrates citation events, citation contexts, semantic citation intent
-annotations, normalized scholarly entities, and an ontology-ready knowledge
-graph spanning 21 Essential Science Indicators (ESI) fields.
+**IDCite**, a large-scale multidisciplinary citation-event resource for
+interdisciplinary discovery and scientific discovery research. IDCite models
+scholarly interactions at the citation-event level rather than as
+document-level citation links, and integrates citation events, citation
+contexts, semantic citation intent annotations, normalized scholarly entities,
+geographic information, and an ontology-ready knowledge graph spanning 21
+Essential Science Indicators (ESI) fields.
 
-This repository accompanies the CitationHub **Scientific data** paper and
-contains all code required to reproduce citation harvesting, metadata
-collection, citation-event construction, semantic citation enrichment, entity
-resolution, ontology-ready knowledge graph generation, and technical
-validation of the released resource.
+IDCite is a graph-oriented resource derived from the previously released
+**MDCite** citation dataset: MDCite provides large-scale citation-event records
+and citation metadata, while IDCite extends this foundation through metadata
+normalization, entity resolution, semantic enrichment, ontology construction,
+and knowledge graph generation.
+
+This repository accompanies the IDCite **Scientific Data** paper and contains
+all code required to reproduce citation harvesting, metadata collection,
+citation-event construction, semantic citation enrichment, entity resolution,
+ontology-ready knowledge graph generation, and technical validation of the
+released resource.
 
 ---
 
@@ -29,7 +36,7 @@ validation of the released resource.
 - **Knowledge graph:** 3,418,433 nodes / 6,855,117 edges
 - **Data snapshot:** collected November 2025
 
-CitationHub preserves the scale, imbalance, and disciplinary heterogeneity of
+IDCite preserves the scale, imbalance, and disciplinary heterogeneity of
 real-world scholarly citations across the life sciences, medicine, engineering,
 physical sciences, social sciences, humanities, and multidisciplinary domains.
 
@@ -57,7 +64,7 @@ README.md
 
 ## Data Sources
 
-CitationHub is constructed by integrating multiple large-scale scholarly data
+IDCite is constructed by integrating multiple large-scale scholarly data
 sources:
 
 ### Scopus bibliographic records
@@ -84,7 +91,7 @@ contexts correspond to textual spans surrounding in-text citation markers.
 
 ## Construction Pipeline
 
-CitationHub is built through a transparent and reproducible pipeline:
+IDCite is built through a transparent and reproducible pipeline:
 
 1. **Seed paper acquisition & journal-stratified sampling**
    - Journals grouped by WoS subject categories (21 categories × 5 journals)
@@ -138,10 +145,10 @@ CitationHub is built through a transparent and reproducible pipeline:
 - Iterates over lists of influential papers for large-scale context extraction
   across multiple journal groups.
 
-### CitationHub Construction (`code/CitationHub Construction/`)
+### IDCite Construction (`code/CitationHub Construction/`)
 
 #### `ontology.py`
-- Builds the ontology-ready CitationHub resource from the raw seed-paper and
+- Builds the ontology-ready IDCite resource from the raw seed-paper and
   citing-context archives.
 - Generates citation-event records, citing-paper and seed-paper tables,
   enriched citation events, and normalized entity lookup tables
@@ -172,7 +179,7 @@ CitationHub is built through a transparent and reproducible pipeline:
 
 ## Released Dataset Components
 
-The released CitationHub resource is distributed as structured Parquet files:
+The released IDCite resource is distributed as structured Parquet files:
 
 | Component | Rows | Columns |
 |-----------|------|---------|
@@ -228,13 +235,14 @@ The released CitationHub resource is distributed as structured Parquet files:
 
 ## Intended Use Cases
 
-CitationHub supports a wide range of research scenarios, including:
+IDCite supports a wide range of research scenarios, including:
 
 - Citation-aware information retrieval
 - Intent-aware ranking and re-ranking
 - Citation recommendation and candidate generation
 - Large-scale citation intent classification
 - Scientometric and bibliometric analysis
+- Interdisciplinary knowledge discovery
 - Knowledge graph analytics and link prediction
 - AI-assisted scientific discovery workflows
 
@@ -255,26 +263,26 @@ Reproducing the full pipeline requires:
 
 API keys, where required, must be supplied via environment variables and are
 not included in this repository. Because the underlying scholarly
-infrastructures are continuously updated, CitationHub should be interpreted as
-a snapshot of the scholarly ecosystem corresponding to the November 2025
+infrastructures are continuously updated, IDCite should be interpreted as a
+snapshot of the scholarly ecosystem corresponding to the November 2025
 collection period.
 
 ---
 
 ## Code Availability
 
-The software resources associated with CitationHub are provided through two
+The software resources associated with IDCite are provided through two
 complementary repositories:
 
-- **Dataset construction pipeline (this repository):**
+- **Dataset construction pipeline (MDCite, this repository):**
   https://github.com/kecau/MDCite
-- **Interactive dashboard and visualization platform:**
+- **Interactive dashboard and visualization platform (CitationHub):**
   https://github.com/kecau/CitationHub
 
 ---
 
 ## Data Availability
 
-- **Archived dataset (Zenodo):** https://zenodo.org/records/18536895
-- **Processed graph database (Hugging Face):**
+- **Original MDCite dataset (Zenodo):** https://zenodo.org/records/18536895
+- **IDCite processed dataset and graph database (Hugging Face):**
   https://huggingface.co/datasets/Daniel0315/CitationHub
