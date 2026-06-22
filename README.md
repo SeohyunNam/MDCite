@@ -84,7 +84,7 @@ retrieval (i.e., identifying papers that cite the selected seed papers).
 
 ### Semantic Scholar Graph API
 The **Semantic Scholar Graph API** is used to retrieve citation context spans
-and citation intent signals associated with each citing paper. Citation
+associated with each citing paper. Citation
 contexts correspond to textual spans surrounding in-text citation markers.
 
 ---
