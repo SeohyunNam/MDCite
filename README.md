@@ -1,5 +1,5 @@
 # IDCite
-**Interdisciplinary Discovery Citation Dataset — dataset construction pipeline**
+**Interdisciplinary Discovery Citation Dataset**
 
 This repository provides the dataset construction pipeline used to build
 **IDCite**, a large-scale multidisciplinary citation-event resource for
