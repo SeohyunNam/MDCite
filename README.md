@@ -4,8 +4,6 @@
 
 The dataset contains 1,857,503 citation records linking 1,467,045 citing papers and 23,479 seed papers, enriched with citation contexts, citation-intent annotations, publication metadata, and normalized scholarly entities.
 
- **IDCite** extends the previously released MDContextCite resource through citation-intent annotation, metadata normalization, entity resolution, and multidisciplinary integration. A supplementary knowledge graph representation is additionally provided.
-
 This repository contains the complete pipeline for metadata collection, citation harvesting, citation-context integration, citation-intent annotation, entity normalization, dataset generation.
 
 ---
