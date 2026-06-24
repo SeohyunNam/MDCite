@@ -228,35 +228,6 @@ contribute to multiple intent classes.
 
 ---
 
-## Technical Validation
-
-`idcite_technical_validation.py` reproduces the technical-validation analyses
-reported in the paper.
-
-### Metadata completeness
-
-| Table | DOI | Title | Year | Venue |
-|-------|-----|-------|------|-------|
-| Citation records | 88.91% | 100.00% | 99.36% | 80.42% |
-| Citing papers | 89.12% | 100.00% | 99.31% | 80.33% |
-| Seed papers | 100.00% | 100.00% | – | 100.00% |
-
-### Dataset integrity and normalization
-
-| Metric | Value |
-|--------|-------|
-| Citation records | 1,857,503 |
-| Citation-intent coverage | 100.00% |
-| Citation links to citing papers | 100.00% |
-| Citation links to seed papers | 92.11% |
-| Unresolved seed-paper links | 146,543 (2,182 identifiers) |
-| Unique author entities | 16,839 |
-| Unique affiliation entities | 5,271 |
-| Unique journal entities | 46,237 |
-| Duplicate author / affiliation / journal identifiers | 0 |
-
----
-
 ## Supplementary Knowledge Graph
 
 In addition to the core citation tables, IDCite provides an **optional,
@@ -314,7 +285,7 @@ collection period.
 The software resources associated with IDCite are provided through two
 complementary repositories:
 
-- **Dataset construction pipeline (MDContextCite, this repository):**
+- **Dataset construction pipeline (MDCite, this repository):**
   https://github.com/kecau/MDCite
 - **Interactive dashboard and visualization platform (CitationHub):**
   https://github.com/kecau/CitationHub
