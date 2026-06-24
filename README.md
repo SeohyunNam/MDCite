@@ -1,28 +1,12 @@
 # IDCite
-**An interdisciplinary citation dataset with citation contexts and citation intents**
 
-This repository provides the dataset construction pipeline used to build
-**IDCite**, a large-scale multidisciplinary citation-event resource for
-interdisciplinary discovery and scientific discovery research. 
+ **IDCite** is a large-scale multidisciplinary dataset of citation contexts and citation intents spanning 21 Essential Science Indicators (ESI) fields.
 
-**IDCite** models scholarly interactions at the citation-event level rather than as
-document-level citation links, and integrates citation events, citation
-contexts, semantic citation intent annotations, and normalized scholarly
-entities (including geographic information) spanning 21 Essential Science
-Indicators (ESI) fields. An ontology-ready knowledge graph representation is
-additionally provided as a supplementary resource.
+The dataset contains 1,857,503 citation records linking 1,467,045 citing papers and 23,479 seed papers, enriched with citation contexts, citation-intent annotations, publication metadata, and normalized scholarly entities.
 
-**IDCite** is derived from the previously released
-**MDContextCite** citation database: MDContextCite provides large-scale citation-event records
-and citation metadata, while IDCite extends this foundation through metadata
-normalization, entity resolution, and semantic enrichment, with a supplementary
-ontology-ready knowledge graph.
+ **IDCite** extends the previously released MDContextCite resource through citation-intent annotation, metadata normalization, entity resolution, and multidisciplinary integration. A supplementary knowledge graph representation is additionally provided.
 
-This repository accompanies the **IDCite** Data Descriptor manuscript submitted to Scientific Data. 
-It contains all code required to reproduce citation harvesting, metadata collection,
-citation-event construction, semantic citation enrichment, entity resolution,
-the supplementary ontology-ready knowledge graph, and technical validation of the
-released resource.
+This repository contains the complete pipeline for metadata collection, citation harvesting, citation-context integration, citation-intent annotation, entity normalization, dataset generation, and technical validation.
 
 ---
 
