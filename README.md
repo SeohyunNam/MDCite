@@ -408,3 +408,6 @@ IDCite builds upon the scholarly citation resources previously released through 
 - **Version 1 — MDCite:** [10.5281/zenodo.18410050](https://doi.org/10.5281/zenodo.18410050)
 - **Version 2 — MDContextCite / EdgeCite:** [10.5281/zenodo.18536895](https://doi.org/10.5281/zenodo.18536895)
 - **Version 3 — IDCite:** [10.5281/zenodo.20796923](https://doi.org/10.5281/zenodo.20796923)
+
+## License
+This code is released under the MIT License. See [LICENSE](LICENSE) for details.
