@@ -6,13 +6,19 @@ The dataset contains 1,857,503 citation records linking 1,467,045 citing papers 
 
 This repository contains the complete pipeline for metadata collection, citation harvesting, citation-context integration, citation-intent annotation, entity normalization, dataset generation.
 
+The current release is **IDCite Version 4**, in which all seed-paper
+bibliographic metadata come from OpenAlex and no Scopus-derived content is
+redistributed (see [Pipeline 5](code/5_IDCite_v4/README.md)).
+
 ---
 
 ## Dataset Construction Pipeline 
 
 From raw scholarly sources, a single preprocessing pipeline produces the shared
 **Citation context & intent data**, which three downstream pipelines turn into
-the **MDCite(v1)**, **EdgeCite(v2)**, and **IDCite(v3)** releases.
+the **MDCite(v1)**, **EdgeCite(v2)**, and **IDCite(v3)** releases. Pipeline 5
+derives **IDCite(v4)** from the v3 tables by replacing the Scopus-derived
+seed-paper metadata with OpenAlex metadata.
 
 ```mermaid
 %%{init: {"flowchart": {"padding": 16, "nodeSpacing": 55, "rankSpacing": 70}}}%%
@@ -44,8 +50,11 @@ flowchart TD
     subgraph P3["3 · EdgeCite"]
         C1["build_edgecite.py"] --> C2[["retrieval_dataset<br/>citing_disjoint_<br/>with_year.parquet"]]
     end
-    subgraph P4["4 · IDCite"]
+    subgraph P4["4 · IDCite (v3)"]
         D1["ontology.py"] --> D2[["17 Parquet tables<br/>KG: 3.4M nodes<br/>6.9M edges"]]
+    end
+    subgraph P5["5 · IDCite v4"]
+        E1["fetch_openalex_<br/>seed.py"] --> E2["build_idcite_<br/>v4.py"] --> E3[["17 Parquet tables<br/>OpenAlex seed metadata<br/>no Scopus content"]]
     end
 
     VAL["Technical_Validation<br/>idcite_technical_<br/>validation.py"]
@@ -54,18 +63,20 @@ flowchart TD
     S2 --> A2
     S3 --> A5
     S4 --> A5
+    S3 --> E1
     CTX --> B1
     CTX --> C1
     CTX --> D1
     A4 -. "top-5% anchors" .-> C1
     A4 -. "seed papers" .-> D1
-    D2 --> VAL
+    D2 --> E2
+    E3 --> VAL
 
     classDef src fill:#eaf2ff,stroke:#4a76c4,color:#12305e;
     classDef out fill:#e6f7ec,stroke:#3a9d5d,color:#134a2c;
     classDef ctx fill:#fff3e0,stroke:#d18b28,color:#5c3b0c;
     class S1,S2,S3,S4 src;
-    class B2,C2,D2 out;
+    class B2,C2,D2,E3 out;
     class CTX ctx;
 ```
 
@@ -80,8 +91,9 @@ flowchart TD
 - **Representative WoS categories:** 21
 - **Q1 journals:** 105
 - **Citation intent labels:** 31 observed (30 valid; 7 canonical)
-- **Supplementary knowledge graph:** 3,418,433 nodes / 6,855,117 edges
-- **Data snapshot:** collected November 2025
+- **Supplementary knowledge graph:** 3,420,132 nodes / 6,851,623 edges (v4)
+- **Data snapshot:** citation data collected November 2025; seed-paper
+  metadata retrieved from OpenAlex November 2026 (v4)
 
 IDCite preserves the scale, imbalance, and disciplinary heterogeneity of
 real-world scholarly citations across the life sciences, medicine, engineering,
@@ -104,8 +116,12 @@ code/
 │   └── build_mdcite.py
 ├── 3_EdgeCite_Construction/           # → retrieval_dataset_citing_disjoint_with_year
 │   └── build_edgecite.py
-├── 4_IDCite_Construction/             # → 17 IDCite Parquet tables
+├── 4_IDCite_Construction/             # → 17 IDCite Parquet tables (v3)
 │   └── ontology.py
+├── 5_IDCite_v4/                       # v3 tables → 17 IDCite v4 tables (OpenAlex metadata)
+│   ├── fetch_openalex_seed.py
+│   ├── build_idcite_v4.py
+│   └── compare_v3_v4.py
 ├── Technical_Validation/
 │   ├── human_evaluation.py
 │   └── idcite_technical_validation.py
@@ -116,7 +132,7 @@ README.md
 
 ### Construction pipelines
 
-The code is organized into four self-contained construction pipelines that
+The code is organized into five self-contained construction pipelines that
 reproduce the successive Zenodo releases from the raw inputs. Each folder has
 its own README.
 
@@ -125,7 +141,8 @@ its own README.
 | 1 | Data Collection & Preprocessing | Scopus records → **Citation context & intent data** | `batch_paper_title_multi.py` |
 | 2 | MDCite Construction | Citation context & intent data → **`dataset_context_intent_single`** | `build_mdcite.py` |
 | 3 | EdgeCite Construction | Citation contexts + top-5% anchors → **`retrieval_dataset_citing_disjoint_with_year`** | `build_edgecite.py` |
-| 4 | IDCite Construction | Seed papers + citation contexts → **17 IDCite Parquet tables** | `ontology.py` |
+| 4 | IDCite Construction | Seed papers + citation contexts → **17 IDCite Parquet tables** (v3) | `ontology.py` |
+| 5 | IDCite v4 | v3 tables + OpenAlex seed metadata → **17 IDCite v4 Parquet tables** | `build_idcite_v4.py` |
 
 ---
 
@@ -134,25 +151,32 @@ its own README.
 IDCite is constructed by integrating multiple large-scale scholarly data
 sources:
 
-### Scopus bibliographic records
-Bibliographic metadata are collected via the **Scopus API** (using
-`pybliometrics`), providing journal articles, citation counts, and rich
-publication metadata. These records are used to identify influential seed
-papers based on journal-stratified citation statistics.
+### Scopus bibliographic records (selection only; not redistributed)
+Bibliographic records are collected via the **Scopus API** (using
+`pybliometrics`) under an institutional subscription. Their citation counts are
+used only to rank papers within each journal and select influential seed
+papers. No Scopus records, identifiers, or citation counts are included in the
+released dataset; seed papers are identified by DOI only.
 
-### Web of Science (WoS) 2024 Subject Categories (JCR)
+### Web of Science (WoS) 2024 Subject Categories (JCR) (selection only; not redistributed)
 WoS subject categories are used to group journals by scientific field and to
 select **Top-5 Q1 journals per representative category** (105 journals across
-21 categories), enabling journal-stratified, field-aware sampling.
+21 categories), enabling journal-stratified, field-aware sampling. Only journal
+names and subject-category labels appear in the release; no JCR metrics are
+included.
 
 ### OpenAlex API
-The **OpenAlex API** is used for DOI resolution and large-scale citation-link
-retrieval (i.e., identifying papers that cite the selected seed papers).
+The **OpenAlex API** is used for DOI resolution, large-scale citation-link
+retrieval (i.e., identifying papers that cite the selected seed papers), and,
+from Version 4, all released seed-paper bibliographic metadata (titles,
+venues, first authors, affiliations, locations, citation counts). OpenAlex
+data are released under CC0.
 
 ### Semantic Scholar Graph API
 The **Semantic Scholar Graph API** is used to retrieve citation context spans
 associated with each citing paper. Citation
 contexts correspond to textual spans surrounding in-text citation markers.
+Semantic Scholar data are made available under ODC-BY 1.0.
 
 ---
 
@@ -166,7 +190,8 @@ IDCite is built through a transparent and reproducible pipeline:
    - Produces 23,479 multidisciplinary seed papers
 
 2. **Bibliographic metadata collection**
-   - Metadata harmonized across Scopus, OpenAlex, and Semantic Scholar
+   - Seed-paper metadata retrieved from OpenAlex by DOI (v4; Scopus metadata
+     in v3), citing-paper metadata from Semantic Scholar
 
 3. **Citation-event extraction**
    - Each citing publication is linked to a referenced seed paper as a directed
@@ -181,8 +206,8 @@ IDCite is built through a transparent and reproducible pipeline:
      countries, fields, and citation intents
 
 6. **Supplementary ontology-ready knowledge graph construction**
-   - Heterogeneous nodes and typed edges (3,418,433 nodes / 6,855,117 edges),
-     provided as a supplementary resource
+   - Heterogeneous nodes and typed edges (3,420,132 nodes / 6,851,623 edges
+     in v4), provided as a supplementary resource
 
 7. **Release**
    - Structured Apache Parquet tables for citation events, publication
@@ -241,13 +266,35 @@ not redistributed here (see the folder README).
   ```
   Outputs are written to `<base-dir>/citationhub_v1_ontology_ready/`.
 
+### 5 · IDCite v4 (`code/5_IDCite_v4/`)
+
+Produces the Version 4 release from the v3 tables. See the
+[folder README](code/5_IDCite_v4/README.md).
+
+- `fetch_openalex_seed.py` — retrieves OpenAlex work and institution records
+  for the 23,479 seed DOIs (batched, with single-DOI retry) into a resumable
+  cache.
+- `build_idcite_v4.py` — replaces every Scopus-derived seed-paper attribute
+  with OpenAlex metadata, re-joins `citation_events_enriched`, and rebuilds the
+  entity tables and knowledge graph using the `ontology.py` helpers.
+- `compare_v3_v4.py` — compares v3 and v4 table sizes, checks that no
+  Scopus-named fields remain, and reports seed coverage and linkage.
+  ```bash
+  python "code/5_IDCite_v4/fetch_openalex_seed.py" \
+      --seed-parquet /path/to/citationhub_v1_ontology_ready/seed_cited_papers.parquet \
+      --cache-dir /path/to/openalex_cache
+  python "code/5_IDCite_v4/build_idcite_v4.py" \
+      --v3-dir /path/to/citationhub_v1_ontology_ready \
+      --cache-dir /path/to/openalex_cache --out-dir /path/to/IDCite_v4
+  ```
+
 ### Technical Validation (`code/Technical_Validation/`)
 
 #### `human_evaluation.py`
 - Reproduces the **intent annotation validation**: expert human labels are
   compared with the automatically assigned citation intents.
-- Reads `human_evaluation_Tuan_Anh_Phan.zip` from the Zenodo Version 3
-  release (21 disciplines × 7 canonical intents = 147 CSV files).
+- Reads `human_evaluation_Tuan_Anh_Phan.zip` from the Zenodo release
+  (21 disciplines × 7 canonical intents = 147 CSV files).
 - Reports strict and weak agreement, micro/macro precision–recall–F1, and
   per-intent scores.
 - Run with:
@@ -266,12 +313,14 @@ not redistributed here (see the folder README).
   python "code/Technical_Validation/idcite_technical_validation.py" \
       --data-dir /path/to/wos_data/citationhub_v1_ontology_ready --make-figures
   ```
+  The script runs unchanged on the v4 tables (`--data-dir /path/to/IDCite_v4`).
 
 ---
 
 ## Released Dataset Components
 
-The released IDCite resource is distributed as structured Parquet files:
+The released IDCite resource (Version 4) is distributed as structured Parquet
+files:
 
 | Component | Rows | Columns |
 |-----------|------|---------|
@@ -280,18 +329,22 @@ The released IDCite resource is distributed as structured Parquet files:
 | citation_events_normalized.parquet | 1,857,503 | 23 |
 | citing_papers.parquet | 1,467,045 | 7 |
 | citing_papers_normalized.parquet | 1,467,045 | 8 |
-| seed_cited_papers.parquet | 23,479 | 42 |
-| seed_cited_papers_normalized.parquet | 23,479 | 48 |
-| authors.parquet | 16,839 | 2 |
-| affiliations.parquet | 5,271 | 2 |
-| affiliation_geo.parquet | 5,352 | 6 |
-| cities.parquet | 1,899 | 2 |
-| countries.parquet | 108 | 2 |
-| journals.parquet | 46,237 | 2 |
+| seed_cited_papers.parquet | 23,479 | 32 |
+| seed_cited_papers_normalized.parquet | 23,479 | 38 |
+| authors.parquet | 19,865 | 2 |
+| affiliations.parquet | 4,074 | 2 |
+| affiliation_geo.parquet | 4,088 | 6 |
+| cities.parquet | 1,760 | 2 |
+| countries.parquet | 120 | 2 |
+| journals.parquet | 46,234 | 2 |
 | fields.parquet | 21 | 3 |
 | intents.parquet | 31 | 2 |
-| kg_nodes.parquet | 3,418,433 | 14 |
-| kg_edges.parquet | 6,855,117 | 3 |
+| kg_nodes.parquet | 3,420,132 | 14 |
+| kg_edges.parquet | 6,851,623 | 3 |
+
+Seed-paper bibliographic metadata are available from OpenAlex for 23,252 of
+the 23,479 seed papers (99.03%); the remaining 227 are retained with their DOI
+and sampling labels only.
 
 ---
 
@@ -322,8 +375,8 @@ contribute to multiple intent classes.
 In addition to the core citation tables, IDCite provides an **optional,
 ontology-ready knowledge graph** (`kg_nodes.parquet`, `kg_edges.parquet`) as a
 supplementary resource for downstream graph analytics, network analysis, and
-entity-relationship exploration. It contains 3,418,433 nodes and 6,855,117
-edges with no duplicate node identifiers and 100% source-node linkage.
+entity-relationship exploration. In Version 4 it contains 3,420,132 nodes and
+6,851,623 edges with no duplicate node identifiers.
 
 - **Node types:** SeedPaper, CitingPaper, CitationEvent, Intent, Journal,
   Author, Affiliation, City, Country, Field
@@ -357,15 +410,17 @@ IDCite supports a wide range of research scenarios, including:
 
 ### API Requirements
 Reproducing the full pipeline requires:
-- Access to the **Scopus API** (institutional entitlement may be required)
+- Access to the **Scopus API** (institutional entitlement may be required;
+  needed only to reproduce the seed-paper ranking)
 - Access to the **OpenAlex API** (publicly available)
 - Access to the **Semantic Scholar Graph API** (publicly available; rate limits apply)
 
 API keys, where required, must be supplied via environment variables and are
 not included in this repository. Because the underlying scholarly
 infrastructures are continuously updated, IDCite should be interpreted as a
-snapshot of the scholarly ecosystem corresponding to the November 2025
-collection period.
+snapshot of the scholarly ecosystem: citation data correspond to the November
+2025 collection period, and the v4 seed-paper metadata to the November 2026
+OpenAlex retrieval.
 
 ---
 
@@ -385,9 +440,9 @@ complementary repositories:
 
 The IDCite dataset is publicly available through Zenodo and Hugging Face.
 
-- **Official archived release (Zenodo, Version 3):**  
+- **Official archived release (Zenodo, Version 4):**  
   **IDCite: A Large-Scale Multidisciplinary Citation Intent Dataset for Scholarly Knowledge Discovery**  
-  DOI: [10.5281/zenodo.20796923](https://doi.org/10.5281/zenodo.20796923)
+  DOI: [10.5281/zenodo.23914564](https://doi.org/10.5281/zenodo.23914564)
 
 - **IDCite processed dataset and graph database (Hugging Face):**  
   [https://huggingface.co/datasets/Daniel0315/IDCite](https://huggingface.co/datasets/Daniel0315/IDCite)
@@ -398,16 +453,25 @@ For detailed information on the dataset design, release lineage, data sources, c
 
 **`IDCite_Project_and_Dataset_Documentation_Seohyun_Nam.pdf`**
 
-The documentation is included in the official Zenodo Version 3 release and serves as the primary reference for understanding the structure, scope, provenance, and recommended use of IDCite.
+The documentation is included in the Zenodo Version 3 release and describes the Version 3 tables. For the Version 4 changes, see [Pipeline 5](code/5_IDCite_v4/README.md).
+
+### Data License
+
+The dataset is released under CC BY 4.0, which covers the authors' original contributions (citation-event structure, normalized identifiers, citation-intent annotations, knowledge graph, and human-evaluation archive). Third-party content remains subject to its source terms:
+
+- **OpenAlex** metadata (citation links, seed-paper metadata): CC0 1.0.
+- **Semantic Scholar** data (citation contexts, citing-paper metadata): ODC-BY 1.0; reuse requires attribution to Semantic Scholar. Citation contexts are short excerpts whose copyright remains with the original authors and publishers.
+- **Scopus** and **Web of Science / JCR**: used only for seed-paper and journal selection; no content from these services is redistributed.
 
 ### Previous Releases
 
-IDCite builds upon the scholarly citation resources previously released through this Zenodo record. Earlier versions, including **MDCite** and the **MDContextCite/EdgeCite** release, remain accessible through the Zenodo version history for provenance and reproducibility.
+IDCite builds upon the scholarly citation resources previously released through this Zenodo record. Version 4 supersedes all earlier versions. Earlier versions, including **MDCite**, the **MDContextCite/EdgeCite** release, and IDCite Version 3, remain accessible through the Zenodo version history for provenance only.
 
 - **Concept DOI (all versions):** [10.5281/zenodo.18410049](https://doi.org/10.5281/zenodo.18410049)
 - **Version 1 — MDCite:** [10.5281/zenodo.18410050](https://doi.org/10.5281/zenodo.18410050)
 - **Version 2 — MDContextCite / EdgeCite:** [10.5281/zenodo.18536895](https://doi.org/10.5281/zenodo.18536895)
 - **Version 3 — IDCite:** [10.5281/zenodo.20796923](https://doi.org/10.5281/zenodo.20796923)
+- **Version 4 — IDCite (current):** [10.5281/zenodo.23914564](https://doi.org/10.5281/zenodo.23914564)
 
 ## License
 This code is released under the MIT License. See [LICENSE](LICENSE) for details.
